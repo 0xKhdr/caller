@@ -1,0 +1,37 @@
+{
+  "name": "raid/caller",
+  "description": "Raid Caller Package",
+  "type": "library",
+  "license": "MIT",
+  "authors": [
+    {
+      "name": "Mohamed Khedr",
+      "email": "0xkhdr@gmail.com"
+    }
+  ],
+  "require": {
+    "php": "^8.2",
+    "laravel/framework": "^11.0"
+  },
+  "require-dev": {
+    "laravel/pint": "^1.13"
+  },
+  "autoload": {
+    "psr-4": {
+      "Raid\\Caller\\": "src"
+    }
+  },
+  "extra": {
+    "laravel": {
+      "providers": [
+        "Raid\\Caller\\Providers\\CallerServiceProvider"
+      ]
+    }
+  },
+  "aliases": {},
+  "config": {
+    "sort-packages": true
+  },
+  "minimum-stability": "dev",
+  "prefer-stable": true
+}

@@ -9,7 +9,7 @@ services:
                 - GID=${DOCKER_GID:-1000}
                 - XDEBUG_EXT=${DOCKER_XDEBUG_EXT:-false}
         volumes:
-            - ./src:/var/www/html
+            - ./:/var/www/html
             - ./compose/log/supervisor:/var/log/supervisor
         networks:
             - local-network

@@ -74,10 +74,9 @@ FROM php:8.2-fpm-alpine
 ARG UID=1000
 ARG GID=1000
 ENV UID=${UID} GID=${GID}
-ENV NGINX_ACCESS="/var/lib/nginx /var/log/nginx /var/run/nginx"
 ENV PHP_ACCESS="/var/log/supervisor"
 ENV SUPERVISOR_ACCESS="/var/log/supervisor"
-ENV ACCESS_PATH="${NGINX_ACCESS} ${PHP_ACCESS} ${SUPERVISOR_ACCESS}"
+ENV ACCESS_PATH="${PHP_ACCESS} ${SUPERVISOR_ACCESS}"
 
 # Install runtime dependencies including Nginx
 RUN apk --no-cache add \
@@ -90,9 +89,7 @@ RUN apk --no-cache add \
     oniguruma \
     unzip \
     zip \
-    supervisor \
-    librdkafka \
-    nginx && \
+    supervisor && \
     rm -rf /var/cache/apk/*
 
 # Copy compiled extensions from builder stage
@@ -116,10 +113,6 @@ RUN chown -R laravel:www-data /var/www/html && \
 COPY ./compose/php/rootfs/etc/php/www.conf /usr/local/etc/php-fpm.d/www.conf
 COPY ./compose/php/rootfs/etc/php/php.ini /usr/local/etc/php/php.ini
 
-# Copy Nginx configuration
-COPY ./compose/php/rootfs/etc/nginx/nginx.conf /etc/nginx/nginx.conf
-COPY ./compose/php/rootfs/etc/nginx/default.conf /etc/nginx/conf.d/default.conf
-
 # Copy Supervisor configuration
 COPY ./compose/php/rootfs/etc/supervisor/supervisord.conf /etc/supervisor/supervisord.conf
 
@@ -129,8 +122,8 @@ COPY ./compose/php/rootfs/etc/php/xdebug.ini /usr/local/etc/php/conf.d/xdebug.in
 # Switch to non-root user
 USER laravel
 
-# Expose ports for PHP-FPM and Nginx
+# Expose ports for PHP-FPM
 EXPOSE 9000
 
-# Start Supervisor to manage both services
+# Start Supervisor to manage services
 CMD ["/usr/bin/supervisord", "-c", "/etc/supervisor/supervisord.conf", "-n"]

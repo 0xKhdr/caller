@@ -9,3 +9,6 @@
 /.vscode
 /.zed
 /vendor
+/compose
+/docker-compose.yml
+/.tinker
