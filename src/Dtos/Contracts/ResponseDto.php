@@ -2,4 +2,9 @@
 
 namespace Raid\Caller\Dtos\Contracts;
 
-interface ResponseDto {}
+use Illuminate\Http\Client\Response;
+
+interface ResponseDto
+{
+    public static function fromCall(Response $response): static;
+}

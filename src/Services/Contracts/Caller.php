@@ -2,4 +2,10 @@
 
 namespace Raid\Caller\Services\Contracts;
 
-interface Caller {}
+use Raid\Caller\Dtos\Contracts\RequestDto;
+use Raid\Caller\Dtos\Contracts\ResponseDto;
+
+interface Caller
+{
+    public function call(RequestDto $requestDto): ResponseDto;
+}

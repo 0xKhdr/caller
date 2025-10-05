@@ -2,4 +2,9 @@
 
 namespace Raid\Caller\Dtos;
 
-class ResponseDtoAbstract implements Contracts\ResponseDto {}
+use Illuminate\Http\Client\Response;
+
+abstract class ResponseDtoAbstract implements Contracts\ResponseDto
+{
+    abstract public static function fromCall(Response $response): static;
+}
