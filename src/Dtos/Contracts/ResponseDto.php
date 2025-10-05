@@ -2,7 +2,4 @@
 
 namespace Raid\Caller\Dtos\Contracts;
 
-interface ResponseDto
-{
-
-}
+interface ResponseDto {}

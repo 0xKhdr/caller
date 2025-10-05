@@ -2,7 +2,4 @@
 
 namespace Raid\Caller\Services\Contracts;
 
-interface Caller
-{
-
-}
+interface Caller {}
