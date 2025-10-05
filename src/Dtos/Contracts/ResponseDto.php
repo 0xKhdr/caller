@@ -6,5 +6,7 @@ use Illuminate\Http\Client\Response;
 
 interface ResponseDto
 {
-    public static function fromCall(Response $response): static;
+    public static function fromResponse(Response $response): static;
+
+    public function toArray(): array;
 }

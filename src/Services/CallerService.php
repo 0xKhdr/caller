@@ -18,7 +18,7 @@ class CallerService implements Contracts\Caller
         /** @var ResponseDto $responseDto */
         $responseDto = $requestDto->getResponseDto();
 
-        return $responseDto::fromCall(
+        return $responseDto::fromResponse(
             Http::send(
                 method: $requestDto->getMethod(),
                 url: $requestDto->getUrl(),
