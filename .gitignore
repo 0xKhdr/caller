@@ -12,3 +12,4 @@
 /compose
 /docker-compose.yml
 /.tinker
+composer.lock
