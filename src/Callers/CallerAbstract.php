@@ -6,7 +6,7 @@ use Raid\Caller\Receivers\Contracts\Receiver;
 use Raid\Caller\Services\CallService;
 use Raid\Caller\Traits\Arrayable;
 
-abstract class CallerAbstract implements Contracts\Caller
+abstract readonly class CallerAbstract implements Contracts\Caller
 {
     use Arrayable;
 

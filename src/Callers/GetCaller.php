@@ -2,7 +2,7 @@
 
 namespace Raid\Caller\Callers;
 
-abstract class GetCaller extends CallerAbstract
+abstract readonly class GetCaller extends CallerAbstract
 {
     public function getMethod(): string
     {
