@@ -4,7 +4,7 @@ namespace Raid\Caller\Traits;
 
 trait ToResponse
 {
-    protected int $status;
+    protected readonly int $status;
 
     public function toResponse(): array
     {
