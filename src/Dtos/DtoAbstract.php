@@ -3,10 +3,12 @@
 namespace Raid\Caller\Dtos;
 
 use Raid\Caller\Traits\Arrayable;
+use Raid\Caller\Traits\Responsable;
 
-class DtoAbstract implements Contracts\Dto
+abstract class DtoAbstract implements Contracts\Dto
 {
     use Arrayable;
+    use Responsable;
 
     public function has(string $key): bool
     {
