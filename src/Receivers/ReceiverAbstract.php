@@ -3,13 +3,11 @@
 namespace Raid\Caller\Receivers;
 
 use Illuminate\Http\Client\Response;
+use Raid\Caller\Traits\Arrayable;
 
 abstract class ReceiverAbstract implements Contracts\Receiver
 {
-    abstract public static function fromResponse(Response $response): static;
+    use Arrayable;
 
-    public function toArray(): array
-    {
-        return [];
-    }
+    abstract public static function fromResponse(Response $response): static;
 }
