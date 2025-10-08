@@ -1,10 +1,10 @@
 <?php
 
-namespace Raid\Caller\Dtos;
+namespace Raid\Caller\Receivers;
 
 use Illuminate\Http\Client\Response;
 
-abstract class ResponseDtoAbstract implements Contracts\ResponseDto
+abstract class ReceiverAbstract implements Contracts\Receiver
 {
     abstract public static function fromResponse(Response $response): static;
 
