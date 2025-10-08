@@ -13,12 +13,17 @@ trait ToResponse
             : $this->toErrorResponse();
     }
 
-    public function toErrorResponse(): array
+    protected function toSuccessResponse(): array
     {
         return [];
     }
 
-    public function isSuccessResponse(): bool
+    protected function toErrorResponse(): array
+    {
+        return [];
+    }
+
+    protected function isSuccessResponse(): bool
     {
         return $this->status >= 200 && $this->status < 300;
     }

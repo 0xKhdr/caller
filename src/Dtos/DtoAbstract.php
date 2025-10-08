@@ -2,11 +2,11 @@
 
 namespace Raid\Caller\Dtos;
 
-use Raid\Caller\Traits\Arrayable;
+use Raid\Caller\Traits\ToArray;
 
-abstract readonly class DtoAbstract implements Contracts\Dto
+abstract readonly class DtoAbstract implements Contracts\Dto, Contracts\ToArray
 {
-    use Arrayable;
+    use ToArray;
 
     public function has(string $key): bool
     {

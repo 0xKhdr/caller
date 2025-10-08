@@ -2,13 +2,9 @@
 
 namespace Raid\Caller\Receivers;
 
-use Raid\Caller\Traits\Arrayable;
-use Raid\Caller\Traits\FromResponse;
-use Raid\Caller\Traits\ToResponse;
+use Raid\Caller\Traits\ToArray;
 
-abstract readonly class ReceiverAbstract implements Contracts\Receiver
+abstract readonly class ReceiverAbstract implements Contracts\Receiver, Contracts\ToArray
 {
-    use Arrayable;
-    use FromResponse;
-    use ToResponse;
+    use ToArray;
 }

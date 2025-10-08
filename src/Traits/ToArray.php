@@ -2,7 +2,7 @@
 
 namespace Raid\Caller\Traits;
 
-trait Arrayable
+trait ToArray
 {
     public function toArray(): array
     {
