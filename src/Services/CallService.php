@@ -17,6 +17,7 @@ class CallService implements Contracts\Call
     {
         /** @var Receiver $receiver */
         $receiver = $caller->getReceiver();
+
         return $receiver::fromResponse(
             Http::send(
                 method: $caller->getMethod(),
