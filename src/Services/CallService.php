@@ -2,6 +2,7 @@
 
 namespace Raid\Caller\Services;
 
+use Illuminate\Http\Client\ConnectionException;
 use Illuminate\Support\Facades\Http;
 use Raid\Caller\Callers\Contracts\Caller;
 use Raid\Caller\Receivers\Contracts\Receiver;
@@ -13,6 +14,9 @@ class CallService implements Contracts\Call
         return new self;
     }
 
+    /**
+     * @throws ConnectionException
+     */
     public function call(Caller $caller): Receiver
     {
         /** @var Receiver $receiver */
