@@ -6,6 +6,8 @@ use Raid\Caller\Receivers\Contracts\Receiver;
 
 interface Caller
 {
+    public function call(): Receiver;
+
     public function getMethod(): string;
 
     public function getUrl(): string;
@@ -13,8 +15,4 @@ interface Caller
     public function getOptions(): array;
 
     public function getReceiver(): string;
-
-    public function call(): Receiver;
-
-    public function log(): void;
 }
