@@ -10,7 +10,7 @@ trait ToLog
     /**
      * @throws JsonException
      */
-    public function toLog(): void
+    public function toLog(): static
     {
         Log::info(
             message: sprintf(
@@ -19,5 +19,7 @@ trait ToLog
                 json_encode(get_object_vars($this), JSON_THROW_ON_ERROR)
             )
         );
+
+        return $this;
     }
 }

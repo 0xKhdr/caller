@@ -4,5 +4,5 @@ namespace Raid\Caller\Callers\Contracts;
 
 interface ToLog
 {
-    public function toLog(): void;
+    public function toLog(): static;
 }
