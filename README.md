@@ -1,7 +1,7 @@
 ### Caller Package
 
 - Purpose: Encapsulate outbound HTTP with clear roles: Caller (intent), Service (execution), Receiver (parsing), DTO (domain model).
-- Flow: Controller → Caller::call() → CallService → Laravel Http → Receiver::fromResponse() → DTO → toResponse().
+- Flow: Controller → Caller::call() → CallService → Laravel Http → Receiver::fromResponse()/ DTO → toResponse().
 
 ### Installation
 
