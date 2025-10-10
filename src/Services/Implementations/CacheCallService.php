@@ -2,7 +2,6 @@
 
 namespace Raid\Caller\Services\Implementations;
 
-use GuzzleHttp\Promise\PromiseInterface;
 use Illuminate\Http\Client\ConnectionException;
 use Illuminate\Http\Client\Response;
 use Illuminate\Support\Arr;

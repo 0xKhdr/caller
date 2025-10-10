@@ -6,7 +6,6 @@ use Illuminate\Support\Facades\Log;
 use JsonException;
 use Raid\Caller\Facades\Call;
 use Raid\Caller\Receivers\Contracts\Receiver;
-use Raid\Caller\Services\Contracts\Call as CallContract;
 use Raid\Caller\Traits\ToArray;
 
 abstract readonly class CallerAbstract implements Contracts\Caller, Contracts\ToArray, Contracts\ToLog

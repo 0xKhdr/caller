@@ -3,8 +3,6 @@
 namespace Raid\Caller\Traits;
 
 use Illuminate\Support\Arr;
-use Raid\Caller\Facades\Call;
-use Raid\Caller\Services\Contracts\Call as CallContract;
 use Raid\Caller\Services\Implementations\SimpleCallService;
 use RuntimeException;
 
