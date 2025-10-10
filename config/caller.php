@@ -7,7 +7,7 @@ use Raid\Caller\Services\Implementations\TimeoutCallService;
 
 return [
     // Default call service strategy
-    'service' => 'simple',
+    'service' => 'cache',
 
     // Map of strategy keys to implementation classes
     'services' => [
@@ -42,7 +42,7 @@ return [
 
     'cache' => [
         // Global toggle; per-caller can opt-in via options['caller']['cache'] = true
-        'enabled' => false,
+        'enabled' => true,
         // TTL in seconds for successful GET responses
         'ttl_seconds' => 60,
     ],

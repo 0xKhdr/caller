@@ -1,7 +1,7 @@
 # Raid Caller Package
 
 [![License](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
-[![Laravel](https://img.shields.io/badge/laravel-11%2B-orange.svg)](https://laravel.com/)
+[![Laravel](https://img.shields.io/badge/laravel-9%2B-orange.svg)](https://laravel.com/)
 
 A modular, testable, and maintainable package for encapsulating outbound HTTP calls in Laravel. Raid Caller enforces a clean separation of concerns for HTTP requests, making your codebase more robust and easier to extend.
 
@@ -17,7 +17,7 @@ A modular, testable, and maintainable package for encapsulating outbound HTTP ca
 composer require raid/caller
 ```
 
-- Compatible with Laravel 11+
+- Compatible with Laravel 9+
 - The service provider `Raid\\Caller\\Providers\\CallerServiceProvider` is auto-discovered. If not, register it manually.
 - To publish the config (if available):
 

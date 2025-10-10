@@ -2,7 +2,6 @@
 
 namespace Raid\Caller\Services\Implementations;
 
-use Illuminate\Http\Client\ConnectionException;
 use Illuminate\Http\Client\Response;
 use Illuminate\Support\Facades\Http;
 use Raid\Caller\Callers\Contracts\Caller;
@@ -13,11 +12,9 @@ use Throwable;
 
 class RetryCallService extends CallAbstract
 {
-    public static function make(): self
+    public function __construct()
     {
-        return new self(
-            config: config('caller.retry', [])
-        );
+        $this->config = config('caller.retry', []);
     }
 
     /**

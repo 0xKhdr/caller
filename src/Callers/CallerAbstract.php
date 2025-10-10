@@ -4,6 +4,7 @@ namespace Raid\Caller\Callers;
 
 use Illuminate\Support\Facades\Log;
 use JsonException;
+use Raid\Caller\Facades\Call;
 use Raid\Caller\Receivers\Contracts\Receiver;
 use Raid\Caller\Services\Contracts\Call as CallContract;
 use Raid\Caller\Traits\ToArray;
@@ -14,10 +15,7 @@ abstract readonly class CallerAbstract implements Contracts\Caller, Contracts\To
 
     public function call(): Receiver
     {
-        /** @var CallContract $service */
-        $service = app(CallContract::class);
-
-        return $service->call($this);
+        return Call::call($this);
     }
 
     abstract public function getMethod(): string;

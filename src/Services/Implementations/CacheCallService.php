@@ -15,11 +15,9 @@ use Raid\Caller\Services\Support\CacheKey;
 
 class CacheCallService extends CallAbstract
 {
-    public static function make(): self
+    public function __construct()
     {
-        return new self(
-            config: config('caller.cache', [])
-        );
+        $this->config = config('caller.cache', []);
     }
 
     /**
@@ -46,7 +44,12 @@ class CacheCallService extends CallAbstract
             }
         }
 
-        $response = Http::send(method: $method, url: $url, options: $options);
+        $response = Http::send(
+            method: $method,
+            url: $url,
+            options: $options
+        );
+
         if ($shouldUseCache) {
             $this->put($method, $url, $options, $response);
         }
@@ -59,23 +62,13 @@ class CacheCallService extends CallAbstract
         return (bool) $this->fromConfig('enabled', false);
     }
 
-    public function shouldUseCache(string $method, array $callerConfig): bool
-    {
-        return strtoupper($method) === 'GET'
-            && ($this->isEnabled() || (Arr::get($callerConfig, 'cache', false)));
-    }
-
-    public function keyFor(string $method, string $url, array $options): string
-    {
-        return CacheKey::forRequest($method, $url, $options);
-    }
-
-    public function get(string $method, string $url, array $options): ?PromiseInterface
+    public function get(string $method, string $url, array $options): ?Response
     {
         $key = $this->keyFor($method, $url, $options);
         $cached = Cache::get($key);
+
         if (is_array($cached) && isset($cached['status'], $cached['body'], $cached['headers'])) {
-            return Http::response($cached['body'], (int) $cached['status'], $cached['headers']);
+            return $this->createResponseFromCache($cached);
         }
 
         return null;
@@ -94,8 +87,30 @@ class CacheCallService extends CallAbstract
 
         Cache::put($key, [
             'status' => $status,
-            'body' => $response->json() ?? $response->body(),
+            'body' => $response->body(),
             'headers' => $headers,
         ], $ttlSeconds);
+    }
+
+    public function shouldUseCache(string $method, array $callerConfig): bool
+    {
+        return strtoupper($method) === 'GET'
+            && ($this->isEnabled() || (Arr::get($callerConfig, 'cache', false)));
+    }
+
+    public function keyFor(string $method, string $url, array $options): string
+    {
+        return CacheKey::forRequest($method, $url, $options);
+    }
+
+    protected function createResponseFromCache(array $cached): Response
+    {
+        return new Response(
+            Http::psr7Response(
+                body: Arr::get($cached, 'body', ''),
+                status: (int) Arr::get($cached, 'status', 200),
+                headers: Arr::get($cached, 'headers', [])
+            )
+        );
     }
 }

@@ -10,11 +10,9 @@ use Raid\Caller\Services\CallAbstract;
 
 class TimeoutCallService extends CallAbstract
 {
-    public static function make(): self
+    public function __construct()
     {
-        return new self(
-            config: config('caller.http', [])
-        );
+        $this->config = config('caller.http', []);
     }
 
     /**
@@ -33,7 +31,7 @@ class TimeoutCallService extends CallAbstract
 
         return $receiver::fromResponse(
             $pending->send(
-                method: strtoupper($caller->getMethod()),
+                method: $caller->getMethod(),
                 url: $caller->getUrl(),
                 options: $caller->getOptions(),
             )

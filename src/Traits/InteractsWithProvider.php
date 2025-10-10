@@ -3,6 +3,7 @@
 namespace Raid\Caller\Traits;
 
 use Illuminate\Support\Arr;
+use Raid\Caller\Facades\Call;
 use Raid\Caller\Services\Contracts\Call as CallContract;
 use Raid\Caller\Services\Implementations\SimpleCallService;
 use RuntimeException;
@@ -22,9 +23,9 @@ trait InteractsWithProvider
         }
     }
 
-    protected function registerCallService(): void
+    protected function registerCallFacade(): void
     {
-        $this->app->singleton(CallContract::class, function () {
+        $this->app->bind('call', function () {
             if (! ($key = config('caller.service'))) {
                 throw new RuntimeException('Caller service is not defined in configuration.');
             }
