@@ -2,12 +2,11 @@
 
 namespace Raid\Caller\Services;
 
-use Illuminate\Support\Facades\Http;
 use Illuminate\Http\Client\Response;
-use Throwable;
+use Illuminate\Support\Facades\Http;
 use Raid\Caller\Callers\Contracts\Caller;
 use Raid\Caller\Receivers\Contracts\Receiver;
-use Raid\Caller\Services\CallCacheService;
+use Throwable;
 
 class CallService implements Contracts\Call
 {
@@ -35,8 +34,8 @@ class CallService implements Contracts\Call
         $cfgRetry = config('caller.retry', []);
         $cfgCache = config('caller.cache', []);
 
-        $pending = Http::timeout((float)($cfgHttp['timeout'] ?? 10.0))
-            ->withOptions(['connect_timeout' => (float)($cfgHttp['connect_timeout'] ?? 5.0)]);
+        $pending = Http::timeout((float) ($cfgHttp['timeout'] ?? 10.0))
+            ->withOptions(['connect_timeout' => (float) ($cfgHttp['connect_timeout'] ?? 5.0)]);
 
         // Optional GET response caching delegated to CallCacheService
         $cache = new CallCacheService($cfgCache);
@@ -49,7 +48,7 @@ class CallService implements Contracts\Call
         }
 
         // Manual retry loop to support exponential backoff with jitter and 429 handling
-        $maxAttempts = (int)($cfgRetry['max_attempts'] ?? 3);
+        $maxAttempts = (int) ($cfgRetry['max_attempts'] ?? 3);
         $attempt = 0;
         $lastResponse = null;
         while (true) {
@@ -68,7 +67,7 @@ class CallService implements Contracts\Call
                     $shouldRetry = true;
                 }
 
-                if (!$shouldRetry || $attempt >= $maxAttempts || !($cfgRetry['enabled'] ?? true)) {
+                if (! $shouldRetry || $attempt >= $maxAttempts || ! ($cfgRetry['enabled'] ?? true)) {
                     // Optionally store GET success in cache
                     if ($useCache && $method === 'GET') {
                         $cache->put($method, $url, $options, $response);
@@ -78,35 +77,36 @@ class CallService implements Contracts\Call
                 }
 
                 // Compute backoff delay (ms) with jitter, honor Retry-After if present
-                $delay = (int)($cfgRetry['base_delay_ms'] ?? 200);
+                $delay = (int) ($cfgRetry['base_delay_ms'] ?? 200);
                 $exp = 2 ** max(0, $attempt - 1);
-                $delay = min((int) (($delay) * $exp), (int)($cfgRetry['max_delay_ms'] ?? 2000));
+                $delay = min((int) (($delay) * $exp), (int) ($cfgRetry['max_delay_ms'] ?? 2000));
 
                 $retryAfterHeader = $response->header('Retry-After');
                 if (is_numeric($retryAfterHeader)) {
-                    $delay = max($delay, (int)$retryAfterHeader * 1000);
+                    $delay = max($delay, (int) $retryAfterHeader * 1000);
                 }
 
                 if ($cfgRetry['jitter'] ?? true) {
-                    $delay = random_int((int)($delay * 0.5), $delay);
+                    $delay = random_int((int) ($delay * 0.5), $delay);
                 }
 
                 usleep($delay * 1000);
             } catch (Throwable $e) {
                 $lastResponse = null;
                 $shouldRetry = ($cfgRetry['enabled'] ?? true) && ($cfgRetry['on_connection_exception'] ?? true) && $attempt < $maxAttempts;
-                if (!$shouldRetry) {
+                if (! $shouldRetry) {
                     // Build synthetic 599 response for network errors
                     /** @var Response $response */
                     $response = Http::response(['message' => 'Network error', 'error' => get_class($e)], 599);
+
                     return $receiver::fromResponse($response);
                 }
 
-                $delay = (int)($cfgRetry['base_delay_ms'] ?? 200);
+                $delay = (int) ($cfgRetry['base_delay_ms'] ?? 200);
                 $exp = 2 ** max(0, $attempt - 1);
-                $delay = min((int) (($delay) * $exp), (int)($cfgRetry['max_delay_ms'] ?? 2000));
+                $delay = min((int) (($delay) * $exp), (int) ($cfgRetry['max_delay_ms'] ?? 2000));
                 if ($cfgRetry['jitter'] ?? true) {
-                    $delay = random_int((int)($delay * 0.5), $delay);
+                    $delay = random_int((int) ($delay * 0.5), $delay);
                 }
                 usleep($delay * 1000);
             }

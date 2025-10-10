@@ -1,12 +1,14 @@
-<?php declare(strict_types=1);
+<?php
+
+declare(strict_types=1);
 
 namespace Raid\Caller\Services;
 
 use GuzzleHttp\Promise\PromiseInterface;
+use Illuminate\Http\Client\Response;
 use Illuminate\Support\Arr;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Http;
-use Illuminate\Http\Client\Response;
 use Raid\Caller\Services\Support\CacheKey;
 
 readonly class CallCacheService
@@ -43,6 +45,7 @@ readonly class CallCacheService
         if (is_array($cached) && isset($cached['status'], $cached['body'], $cached['headers'])) {
             return Http::response($cached['body'], (int) $cached['status'], $cached['headers']);
         }
+
         return null;
     }
 
@@ -69,5 +72,3 @@ readonly class CallCacheService
         return Arr::get($this->config, $key, $default);
     }
 }
-
-

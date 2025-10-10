@@ -25,7 +25,7 @@ trait InteractsWithProvider
     protected function registerCallService(): void
     {
         $this->app->singleton(CallContract::class, function () {
-            if (!($key = config('caller.service'))) {
+            if (! ($key = config('caller.service'))) {
                 throw new RuntimeException('Caller service is not defined in configuration.');
             }
             $class = Arr::get(
@@ -33,6 +33,7 @@ trait InteractsWithProvider
                 $key,
                 SimpleCallService::class
             );
+
             return new $class;
         });
     }

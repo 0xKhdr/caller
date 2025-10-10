@@ -16,6 +16,7 @@ abstract readonly class CallerAbstract implements Contracts\Caller, Contracts\To
     {
         /** @var CallContract $service */
         $service = app(CallContract::class);
+
         return $service->call($this);
     }
 
