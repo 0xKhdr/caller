@@ -10,6 +10,13 @@ use Raid\Caller\Services\CallAbstract;
 
 class TimeoutCallService extends CallAbstract
 {
+    public static function make(): self
+    {
+        return new self(
+            config: config('caller.http', [])
+        );
+    }
+
     /**
      * @throws ConnectionException
      */
@@ -18,14 +25,15 @@ class TimeoutCallService extends CallAbstract
         /** @var class-string<Receiver> $receiver */
         $receiver = $caller->getReceiver();
 
-        $cfg = config('caller.http', []);
+        $timeout = (float) ($this->fromConfig('timeout', 10.0));
+        $connectTimeout = (float) ($this->fromConfig('connect_timeout', 5.0));
 
-        $pending = Http::timeout((float) ($cfg['timeout'] ?? 10.0))
-            ->withOptions(['connect_timeout' => (float) ($cfg['connect_timeout'] ?? 5.0)]);
+        $pending = Http::timeout($timeout)
+            ->withOptions(['connect_timeout' => $connectTimeout]);
 
         return $receiver::fromResponse(
             $pending->send(
-                method: strtoupper($caller->getMethod()),
+                method: $caller->getMethod(),
                 url: $caller->getUrl(),
                 options: $caller->getOptions(),
             )

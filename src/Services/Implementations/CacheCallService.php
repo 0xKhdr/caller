@@ -3,6 +3,7 @@
 namespace Raid\Caller\Services\Implementations;
 
 use GuzzleHttp\Promise\PromiseInterface;
+use Illuminate\Http\Client\ConnectionException;
 use Illuminate\Http\Client\Response;
 use Illuminate\Support\Arr;
 use Illuminate\Support\Facades\Cache;
@@ -14,15 +15,16 @@ use Raid\Caller\Services\Support\CacheKey;
 
 class CacheCallService extends CallAbstract
 {
-    public function __construct(
-        protected array $config
-    ) {}
-
     public static function make(): self
     {
-        return new self(config('caller.cache', []));
+        return new self(
+            config: config('caller.cache', [])
+        );
     }
 
+    /**
+     * @throws ConnectionException
+     */
     public function call(Caller $caller): Receiver
     {
         /** @var class-string<Receiver> $receiver */
@@ -32,12 +34,12 @@ class CacheCallService extends CallAbstract
         $url = $caller->getUrl();
         $options = $caller->getOptions();
 
-        $callerMeta = $options['caller'] ?? [];
-        if (isset($options['caller'])) {
-            unset($options['caller']);
-        }
+        $shouldUseCache = $this->shouldUseCache(
+            method: $method,
+            callerConfig: Arr::get($options, 'caller', [])
+        );
 
-        if ($this->shouldUseCache($method, $callerMeta)) {
+        if ($shouldUseCache) {
             $maybe = $this->get($method, $url, $options);
             if ($maybe !== null) {
                 return $receiver::fromResponse($maybe);
@@ -45,7 +47,7 @@ class CacheCallService extends CallAbstract
         }
 
         $response = Http::send(method: $method, url: $url, options: $options);
-        if ($this->shouldUseCache($method, $callerMeta)) {
+        if ($shouldUseCache) {
             $this->put($method, $url, $options, $response);
         }
 
@@ -57,10 +59,10 @@ class CacheCallService extends CallAbstract
         return (bool) $this->fromConfig('enabled', false);
     }
 
-    public function shouldUseCache(string $method, array $callerMeta): bool
+    public function shouldUseCache(string $method, array $callerConfig): bool
     {
         return strtoupper($method) === 'GET'
-            && ($this->isEnabled() || (Arr::get($callerMeta, 'cache', false)));
+            && ($this->isEnabled() || (Arr::get($callerConfig, 'cache', false)));
     }
 
     public function keyFor(string $method, string $url, array $options): string
@@ -95,10 +97,5 @@ class CacheCallService extends CallAbstract
             'body' => $response->json() ?? $response->body(),
             'headers' => $headers,
         ], $ttlSeconds);
-    }
-
-    protected function fromConfig(string $key, mixed $default = null): mixed
-    {
-        return Arr::get($this->config, $key, $default);
     }
 }
