@@ -3,12 +3,12 @@
 
 #### Now
 
-- Defaults in `CallService`: connect/read timeouts; retries with exponential backoff + jitter; 429-aware retry.
-  - Acceptance: configurable via config; per-caller overrides; tests simulate timeouts/429.
-- GET response cache (opt-in): cache key built from method+URL+normalized query; TTL 30–60s.
-  - Acceptance: cache hit/miss tests; bypass on non-GET.
-- Filter null query params in callers to avoid sending `null`.
-  - Acceptance: options show only non-null values; integration test asserts query string.
+- Implemented in `CallService`: connect/read timeouts; retries with exponential backoff + jitter; 429-aware retry.
+  - Configurable via `config('caller.*')`; per-caller can still override via options; tests should simulate timeouts/429.
+- GET response cache (opt-in): cache key built from method+URL+normalized query; TTL configurable.
+  - Covered by `cache.enabled` and `ttl_seconds`; cache hit/miss tests; bypass on non-GET.
+- Query helper to filter null params available: `\Raid\Caller\Support\Query::filterNulls()`.
+  - Ensure callers use it; integration test asserts query string.
 
 #### Next
 

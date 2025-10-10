@@ -2,7 +2,7 @@
 ### Provider
 
 - `CallerServiceProvider`
-  - Uses `InteractsWithProvider` to publish and merge config under tag `caller-pack`.
+  - Uses `InteractsWithProvider` to publish and merge config under tag `caller`.
   - Hook: `register()` publishes/merges; `boot()` is reserved for runtime wiring.
 
 

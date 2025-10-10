@@ -13,7 +13,8 @@ class CallerServiceProvider extends ServiceProvider
 
     public function register(): void
     {
-        $this->publishConfig();
+        $this->registerConfig();
+        $this->registerCallService();
     }
 
     public function boot(): void
