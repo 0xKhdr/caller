@@ -2,15 +2,15 @@
 
 namespace Raid\Caller\Callers;
 
+use Illuminate\Support\Facades\Log;
+use JsonException;
 use Raid\Caller\Receivers\Contracts\Receiver;
 use Raid\Caller\Services\CallService;
 use Raid\Caller\Traits\ToArray;
-use Raid\Caller\Traits\ToLog;
 
 abstract readonly class CallerAbstract implements Contracts\Caller, Contracts\ToArray, Contracts\ToLog
 {
     use ToArray;
-    use ToLog;
 
     public function call(): Receiver
     {
@@ -26,5 +26,27 @@ abstract readonly class CallerAbstract implements Contracts\Caller, Contracts\To
     public function getOptions(): array
     {
         return [];
+    }
+
+    /**
+     * @throws JsonException
+     */
+    public function toLog(): static
+    {
+        Log::log(
+            level: 'info',
+            message: sprintf(
+                'Calling %s on %s with these options: %s',
+                $this->getMethod(),
+                $this->getUrl(),
+                json_encode($this->getOptions(), JSON_THROW_ON_ERROR | JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES)
+            ),
+            context: [
+                'caller' => static::class,
+                'data' => get_object_vars($this),
+            ]
+        );
+
+        return $this;
     }
 }

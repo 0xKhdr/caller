@@ -1,4 +1,3 @@
-```markdown
 # Laravel Caller Documentation
 
 ## Table of Contents
@@ -20,11 +19,6 @@
 - PHP 8.1 or higher
 - Laravel 9.0 or higher
 
-### Via Composer
-```bash
-composer require 0xkhdr/caller
-```
-
 ### Service Provider (Auto-discovered)
 The package will automatically register itself with Laravel.
 
@@ -32,7 +26,7 @@ The package will automatically register itself with Laravel.
 
 Publish the configuration file (optional):
 ```bash
-php artisan vendor:publish --provider="Khdr\Caller\CallerServiceProvider" --tag="config"
+php artisan vendor:publish --provider="Raid\Caller\Providers\CallerServiceProvider" --tag="config"
 ```
 
 ### Configuration File
@@ -76,25 +70,18 @@ return [
 
 namespace App\Dtos;
 
-use Khdr\Caller\Dtos\DtoAbstract;
+use Raid\Caller\Dtos\DtoAbstract;
 
-class UserDto extends DtoAbstract
+readonly class UserDto extends DtoAbstract
 {
     public function __construct(
-        public readonly int $id,
-        public readonly string $name,
-        public readonly string $email,
-        public readonly ?string $phone = null
+        protected int $id,
+        protected string $name
     ) {}
 
     public static function fromArray(array $data): static
     {
-        return new static(
-            id: $data['id'],
-            name: $data['name'],
-            email: $data['email'],
-            phone: $data['phone'] ?? null
-        );
+        return new static(id: $data['id'], name: $data['name']);
     }
 }
 ```
@@ -103,23 +90,40 @@ class UserDto extends DtoAbstract
 ```php
 <?php
 
-namespace App\Receivers;
+namespace App\Receivers\Users;
 
 use Illuminate\Http\Client\Response;
-use Khdr\Caller\Receivers\ReceiverAbstract;
+use Raid\Caller\Receivers\ResponseReceiver;
 use App\Dtos\UserDto;
 
-class UserReceiver extends ReceiverAbstract
+readonly class FindUserReceiver extends ResponseReceiver
 {
+    public function __construct(
+        protected int $status,
+        protected UserDto $user
+    ) {}
+
     public static function fromResponse(Response $response): static
     {
-        $data = $response->json();
-
         return new static(
-            UserDto::fromArray($data['user']),
-            $response->status(),
-            $response->headers()
+            status: $response->status(),
+            user: UserDto::fromArray($response->json())
         );
+    }
+
+    protected function toSuccessResponse(): array
+    {
+        return [
+            'message' => __('User found successfully'),
+            'data' => $this->user->toArray(),
+        ];
+    }
+
+    protected function toErrorResponse(): array
+    {
+        return [
+            'message' => __('Failed to find user'),
+        ];
     }
 }
 ```
@@ -128,42 +132,37 @@ class UserReceiver extends ReceiverAbstract
 ```php
 <?php
 
-namespace App\Callers;
+namespace App\Callers\Users;
 
-use Khdr\Caller\Callers\CallerAbstract;
-use App\Receivers\UserReceiver;
+use App\Receivers\Users\FindUserReceiver;
+use Raid\Caller\Callers\GetCaller;
 
-class GetUserCaller extends CallerAbstract
+readonly class FindUserCaller extends GetCaller
 {
-    protected int $userId;
+    public function __construct(
+        protected int $id
+    ) {}
 
-    public function __construct(int $userId)
+    public static function make(int $id): static
     {
-        $this->userId = $userId;
-    }
-
-    public function getMethod(): string
-    {
-        return 'GET';
+        return new static(id: $id);
     }
 
     public function getUrl(): string
     {
-        return "https://api.example.com/users/{$this->userId}";
+        return "https://api.example.com/users/{$this->id}";
     }
 
     public function getOptions(): array
     {
         return [
-            'headers' => [
-                'Authorization' => 'Bearer ' . config('services.example.api_key'),
-            ],
+            'headers' => ['Accept' => 'application/json'],
         ];
     }
 
     public function getReceiver(): string
     {
-        return UserReceiver::class;
+        return FindUserReceiver::class;
     }
 }
 ```
@@ -174,21 +173,19 @@ class GetUserCaller extends CallerAbstract
 
 namespace App\Http\Controllers;
 
-use App\Callers\GetUserCaller;
+use App\Callers\Users\FindUserCaller;
+use Illuminate\Http\JsonResponse;
 
 class UserController extends Controller
 {
-    public function show(int $userId)
+    public function find(int $userId): JsonResponse
     {
-        $caller = new GetUserCaller($userId);
-        $response = $caller->call();
+        $receiver = FindUserCaller::make($userId)->call();
 
-        // Access the DTO
-        $user = $response->getDto();
-
-        return view('users.show', [
-            'user' => $user
-        ]);
+        return response()->json(
+            data: $receiver->toResponse(),
+            status: $receiver->getStatus()
+        );
     }
 }
 ```
@@ -224,28 +221,23 @@ interface Caller
 
 ### Receivers
 
-Receivers handle the API response and transform it into DTOs.
+Receivers handle the API response and transform it into DTOs. If you extend `ResponseReceiver`, you get `toResponse()` and `getStatus()` helpers via the `ToResponse` trait.
 
 #### Receiver Interface
 ```php
 interface Receiver
 {
     public static function fromResponse(Response $response): static;
-    public function getDto(): ?Dto;
-    public function getStatusCode(): int;
-    public function getHeaders(): array;
 }
 ```
 
-#### Available Methods in ReceiverAbstract
-- `getDto()`: Returns the DTO instance
-- `getStatusCode()`: Returns HTTP status code
-- `getHeaders()`: Returns response headers
-- `isSuccessful()`: Checks if request was successful (200-299)
+#### Available Helpers (when extending ResponseReceiver)
+- `toResponse()`: Shape a success/error payload
+- `getStatus()`: HTTP status integer
 
 ### DTOs
 
-DTOs provide a structured, type-safe way to access response data.
+DTOs provide a structured, convenient way to access response data.
 
 #### DTO Interface
 ```php
@@ -254,15 +246,13 @@ interface Dto
     public static function fromArray(array $data): static;
     public function has(string $key): bool;
     public function get(string $key, mixed $default = null): mixed;
-    public function toArray(): array;
 }
 ```
 
 #### Available Methods in DtoAbstract
 - `has($key)`: Checks if a property exists
 - `get($key, $default)`: Gets a property with optional default
-- `toArray()`: Converts DTO to array
-- `toJson()`: Converts DTO to JSON
+- `toArray()`: Provided by `ToArray` trait
 
 ## Advanced Usage
 
@@ -284,85 +274,49 @@ class CustomCaller extends CallerAbstract
 ```
 
 ### Error Handling
-```php
-try {
-    $caller = new GetUserCaller(123);
-    $response = $caller->call();
-    
-    if (!$response->isSuccessful()) {
-        throw new ApiException('API request failed');
-    }
-    
-    $user = $response->getDto();
-} catch (Exception $e) {
-    // Handle exception
-    Log::error('API call failed: ' . $e->getMessage());
-}
-```
+Use the returned Receiver's `getStatus()` and `toResponse()` to decide success/failure when extending `ResponseReceiver`.
 
 ### Request/Response Logging
-The package automatically logs requests and responses when logging is enabled in the configuration.
+You can log around the caller execution at your application boundary as needed.
 
-### Middleware Support
-```php
-class GetUserCaller extends CallerAbstract
-{
-    public function getOptions(): array
-    {
-        return [
-            'middleware' => [
-                new RetryMiddleware(3, 100),
-            ],
-        ];
-    }
-}
-```
+### HTTP Options
+Anything supported by Laravel's `Http::send()` options may be provided via `getOptions()` (e.g., headers, query, json, timeout).
+
+### Extension Points & Roadmap
+- Error DTO standardization and exception mapping at boundaries.
+- Rate limit aware retry middleware with backoff and header parsing.
+- Optional circuit breaker (per-caller) with fallback Receiver.
+- DTO scaffolding from OpenAPI to speed integration.
 
 ## Testing
 
-### Mocking Callers
+### Mocking HTTP
+Use Laravel HTTP fakes to drive your Receivers and endpoints in tests.
+
+### Testing Custom Receivers
 ```php
-use Khdr\Caller\Testing\CallerFake;
-
-class UserControllerTest extends TestCase
+class FindUserReceiverTest extends TestCase
 {
-    public function test_get_user()
+    public function test_from_response()
     {
-        // Fake the caller
-        CallerFake::fake([
-            GetUserCaller::class => [
-                'dto' => new UserDto(1, 'John Doe', 'john@example.com'),
-                'status' => 200,
-            ],
-        ]);
-
-        $response = $this->get('/users/1');
-
-        $response->assertStatus(200);
-        CallerFake::assertCalled(GetUserCaller::class);
+        $response = Http::response(['id' => 1, 'name' => 'John Doe'], 200);
+        $receiver = FindUserReceiver::fromResponse($response);
+        $this->assertSame(200, $receiver->getStatus());
+        $this->assertSame('User found successfully', $receiver->toResponse()['message']);
     }
 }
 ```
 
-### Testing Custom Receivers
+### Quick Receiver Unit Pattern
 ```php
-class UserReceiverTest extends TestCase
+class FindUserReceiverTest extends TestCase
 {
-    public function test_from_response()
+    public function test_from_response_builds_dto_and_status()
     {
-        $response = new Response('{
-            "user": {
-                "id": 1,
-                "name": "John Doe",
-                "email": "john@example.com"
-            }
-        }', 200);
-
-        $receiver = UserReceiver::fromResponse($response);
-        $dto = $receiver->getDto();
-
-        $this->assertEquals(1, $dto->id);
-        $this->assertEquals('John Doe', $dto->name);
+        $response = Http::response(['id' => 1, 'name' => 'John'], 200);
+        $receiver = FindUserReceiver::fromResponse($response);
+        $this->assertSame(200, $receiver->getStatus());
+        $this->assertSame('User found successfully', $receiver->toResponse()['message']);
     }
 }
 ```
@@ -371,17 +325,26 @@ class UserReceiverTest extends TestCase
 
 ### POST Request with Payload
 ```php
-class CreateUserCaller extends CallerAbstract
+readonly class StoreUserCaller extends PostCaller
 {
     public function __construct(
-        protected array $userData
+        protected string $name,
+        protected string $username,
+        protected ?string $phone = null,
     ) {}
 
-    public function getMethod(): string
-    {
-        return 'POST';
+    public static function make(
+        string $name,
+        string $username,
+        ?string $phone = null,
+    ): static {
+        return new static(
+            name: $name,
+            username: $username,
+            phone: $phone
+        );
     }
-
+    
     public function getUrl(): string
     {
         return 'https://api.example.com/users';
@@ -390,36 +353,34 @@ class CreateUserCaller extends CallerAbstract
     public function getOptions(): array
     {
         return [
-            'json' => $this->userData,
             'headers' => [
                 'Content-Type' => 'application/json',
             ],
+            'json' => $this->toArray()
         ];
     }
 
     public function getReceiver(): string
     {
-        return UserReceiver::class;
+        return StoreUserReceiver::class;
     }
 }
 ```
 
 ### Handling Paginated Responses
 ```php
-class PaginatedUserReceiver extends ReceiverAbstract
+readonly class PaginatedUsersReceiver extends ResponseReceiver
 {
+    public function __construct(
+        protected int $status,
+        protected array $users
+    ) {}
+    
     public static function fromResponse(Response $response): static
     {
-        $data = $response->json();
-        
-        $users = array_map(function ($userData) {
-            return UserDto::fromArray($userData);
-        }, $data['users']);
-
         return new static(
-            new UserCollectionDto($users, $data['meta']),
-            $response->status(),
-            $response->headers()
+            status: $response->status(),
+            users: array_map(fn ($u) => UserDto::fromArray($u), $response->json()['users'] ?? [])
         );
     }
 }
@@ -436,13 +397,11 @@ class PaginatedUserReceiver extends ReceiverAbstract
 | `getOptions()`  | `array`     | Request options               |
 | `getReceiver()` | `string`    | Receiver class name           |
 
-### ReceiverAbstract Methods
-| Method            | Return Type | Description              |
-|-------------------|-------------|--------------------------|
-| `getDto()`        | `?Dto`      | Returns the DTO instance |
-| `getStatusCode()` | `int`       | HTTP status code         |
-| `getHeaders()`    | `array`     | Response headers         |
-| `isSuccessful()`  | `bool`      | Checks if status is 2xx  |
+### ResponseReceiver Helpers
+| Method         | Return Type | Description                        |
+|----------------|-------------|------------------------------------|
+| `toResponse()` | `array`     | Success/error payload based on 2xx |
+| `getStatus()`  | `int`       | HTTP status code                   |
 
 ### DtoAbstract Methods
 | Method                | Return Type | Description               |
@@ -450,7 +409,6 @@ class PaginatedUserReceiver extends ReceiverAbstract
 | `has($key)`           | `bool`      | Checks if property exists |
 | `get($key, $default)` | `mixed`     | Gets property value       |
 | `toArray()`           | `array`     | Converts to array         |
-| `toJson()`            | `string`    | Converts to JSON          |
 
 ## Support
 
@@ -461,4 +419,3 @@ For issues and questions:
 ## Contributing
 
 Please see [CONTRIBUTING.md](CONTRIBUTING.md) for details.
-```
