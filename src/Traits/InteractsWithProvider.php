@@ -11,9 +11,9 @@ trait InteractsWithProvider
         foreach ($configResources as $configPath) {
             $this->publishes([
                 $configPath => config_path(basename($configPath)),
-            ], 'caller-pack');
+            ], 'caller');
 
-            $this->mergeConfigFrom($configPath, 'caller-pack');
+            $this->mergeConfigFrom($configPath, 'caller');
         }
     }
 }
