@@ -16,7 +16,7 @@ class SimpleCallService extends CallAbstract
 
         return $receiver::fromResponse(
             response: Http::send(
-                method: $caller->getMethod(),
+                method: strtoupper($caller->getMethod()),
                 url: $caller->getUrl(),
                 options: $caller->getOptions(),
             )
