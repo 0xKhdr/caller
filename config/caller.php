@@ -6,8 +6,20 @@ use Raid\Caller\Services\Implementations\SimpleCallService;
 use Raid\Caller\Services\Implementations\TimeoutCallService;
 
 return [
+
+    'executor' => [
+        'timeout' => 30,
+        'retry' => [
+            'times' => 3,
+            'sleep' => 1000,
+        ],
+        'middleware' => [
+            'global' => [],
+        ],
+    ],
+
     // Default call service strategy
-    'service' => 'cache',
+    'service' => 'simple',
 
     // Map of strategy keys to implementation classes
     'services' => [

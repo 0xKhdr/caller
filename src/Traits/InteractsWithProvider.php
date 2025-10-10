@@ -25,7 +25,7 @@ trait InteractsWithProvider
     {
         $this->app->bind('call', function () {
             if (! ($key = config('caller.service'))) {
-                throw new RuntimeException('Caller service is not defined in configuration.');
+                throw new RuntimeException('BuilderAbstract service is not defined in configuration.');
             }
             $class = Arr::get(
                 (array) config('caller.services', []),
@@ -36,4 +36,6 @@ trait InteractsWithProvider
             return new $class;
         });
     }
+
+    protected function registerExecutor(): void {}
 }
